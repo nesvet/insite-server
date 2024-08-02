@@ -1,12 +1,12 @@
 import { CookieSetter, InSiteCookieMiddleware } from "insite-cookie/server";
-import { SubscriptionHandler, WithUser } from "insite-subscriptions-server/ws";
-import { InSiteWebSocketServer, InSiteWebSocketServerClient } from "insite-ws/server";
-import { IncomingTransport } from "insite-ws-transfers/node";
+import { SubscriptionHandler, type WithUser } from "insite-subscriptions-server/ws";
+import { InSiteWebSocketServer, type InSiteWebSocketServerClient } from "insite-ws/server";
+import { IncomingTransport, OutgoingTransport } from "insite-ws-transfers/node";
 import {
 	connect,
 	type InSiteCollections,
 	type InSiteDB,
-	MongoClient
+	type MongoClient
 } from "insite-db";
 import {
 	InSiteHTTPServer,
@@ -16,7 +16,7 @@ import {
 } from "insite-http";
 import { type AbilitiesSchema, Users } from "insite-users-server";
 import { UsersServer } from "insite-users-server-ws";
-import { Optional, Options } from "./types";
+import type { Optional, Options } from "./types";
 
 
 export class InSite<AS extends AbilitiesSchema> {
@@ -30,6 +30,7 @@ export class InSite<AS extends AbilitiesSchema> {
 	collections!: InSiteCollections;
 	wss!: InSiteWebSocketServer;
 	incomingTransport!: IncomingTransport;
+	outgoingTransport!: OutgoingTransport;
 	subscriptionHandler!: SubscriptionHandler<AS>;
 	usersServer!: UsersServer<AS>;
 	users!: Users<AS>;
@@ -40,7 +41,7 @@ export class InSite<AS extends AbilitiesSchema> {
 		
 		const {
 			db: dbOptions,
-			wss: wssOptions,
+			wss: wssWithOtherOptions,
 			users: usersWithServerOptions,
 			cookie: cookieWithMiddlewareOptions,
 			http: httpWithMiddlewareOptions
@@ -53,24 +54,36 @@ export class InSite<AS extends AbilitiesSchema> {
 				collections: this.collections
 			} = await connect(dbOptions));
 		
-		if (wssOptions) {
+		if (wssWithOtherOptions) {
+			const {
+				subscriptions,
+				incomingTransport: incomingTransportOptions,
+				outgoingTransport,
+				...wssOptions
+			} = wssWithOtherOptions;
+			
 			this.wss = new InSiteWebSocketServer(wssOptions);
+			
+			if (subscriptions !== null)
+				this.subscriptionHandler = new SubscriptionHandler(this.wss);
+			
+			if (incomingTransportOptions !== null && (incomingTransportOptions || (this.collections && usersWithServerOptions)))
+				this.incomingTransport = new IncomingTransport(this.wss, incomingTransportOptions);
+			
+			if (outgoingTransport)
+				this.outgoingTransport = new OutgoingTransport(this.wss);
 			
 			if (process.env.NODE_ENV === "development")
 				this.wss.on("client-connect", (wssc: WithUser<InSiteWebSocketServerClient>) => console.info(`🔌 WebSocket connected with ${wssc.session?.user.email}`));
 			
 			this.wss.on("error", (error: Error) => console.error("🔌❗️ WebSocket Server:", error));
 			this.wss.on("close", () => console.error("🔌❗️ WebSocket Server closed"));
-			
-			this.incomingTransport = new IncomingTransport(this.wss);
-			
-			this.subscriptionHandler = new SubscriptionHandler(this.wss);
 		}
 		
 		if (usersWithServerOptions && this.collections) {
 			const { server: usersServerOptions, ...usersOptions } = usersWithServerOptions;
 			
-			if (usersServerOptions && this.wss) {
+			if (this.wss && this.subscriptionHandler) {
 				this.usersServer = await UsersServer.init({
 					...usersServerOptions,
 					users: usersOptions,
