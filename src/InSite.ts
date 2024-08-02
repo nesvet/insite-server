@@ -21,7 +21,7 @@ import { Optional, Options } from "./types";
 
 export class InSite<AS extends AbilitiesSchema> {
 	constructor(options: Options<AS>) {
-		this.#initPromise = this.init!(options);
+		this.initPromise = this.init!(options);
 		
 	}
 	
@@ -117,10 +117,10 @@ export class InSite<AS extends AbilitiesSchema> {
 		return this;
 	};
 	
-	#initPromise;
+	private initPromise;
 	
 	whenReady() {
-		return this.#initPromise;
+		return this.initPromise;
 	}
 	
 	
