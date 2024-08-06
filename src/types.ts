@@ -1,5 +1,6 @@
 import type { CookieMiddlewareOptions, Options as CookieSetterOptions } from "insite-cookie/server";
-import type { Options as WSServerOptions } from "insite-ws/server";
+import type { WithPublish, WithPublishCollection } from "insite-subscriptions-server/ws";
+import type { InSiteWebSocketServer, Options as WSServerOptions } from "insite-ws/server";
 import type { Options as DBOptions } from "insite-db";
 import type {
 	Options as HTTPServerOptions,
@@ -8,7 +9,7 @@ import type {
 	TemplateMiddlewareOptions
 } from "insite-http";
 import type { AbilitiesSchema, Options as UsersOptions } from "insite-users-server";
-import type { Options as UsersServerOptions } from "insite-users-server-ws";
+import type { Options as UsersServerOptions, WSSCWithUser } from "insite-users-server-ws";
 import type { IncomingTransportOptions } from "insite-ws-transfers";
 
 
@@ -18,7 +19,7 @@ export type Options<AS extends AbilitiesSchema> = {
 		subscriptions?: null | true;
 		incomingTransport?: IncomingTransportOptions | null;
 		outgoingTransport?: null | true;
-	} & WSServerOptions;
+	} & WSServerOptions<WSSCWithUser<AS>>;
 	users?: {
 		server?: Omit<UsersServerOptions<AS>, "collections" | "incomingTransport" | "users" | "wss">;
 	} & UsersOptions<AS>;
@@ -74,3 +75,10 @@ export type Optional<I, O, AS extends AbilitiesSchema> =
 			>, O, AS
 		>, O, AS
 	>;
+
+export type WSS<AS extends AbilitiesSchema, O> =
+	O extends OptionsWithWSSSubscriptionHandler<AS> ?
+		O extends OptionsWithDB<AS> ?
+			WithPublishCollection<InSiteWebSocketServer<WSSCWithUser<AS>>, AS> :
+			WithPublish<InSiteWebSocketServer<WSSCWithUser<AS>>, AS> :
+		InSiteWebSocketServer<WSSCWithUser<AS>>;

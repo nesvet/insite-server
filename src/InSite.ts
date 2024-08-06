@@ -1,6 +1,6 @@
 import { CookieSetter, InSiteCookieMiddleware } from "insite-cookie/server";
-import { SubscriptionHandler, type WithUser } from "insite-subscriptions-server/ws";
-import { InSiteWebSocketServer, type InSiteWebSocketServerClient } from "insite-ws/server";
+import { SubscriptionHandler } from "insite-subscriptions-server/ws";
+import { InSiteWebSocketServer } from "insite-ws/server";
 import { IncomingTransport, OutgoingTransport } from "insite-ws-transfers/node";
 import {
 	connect,
@@ -15,12 +15,12 @@ import {
 	InSiteTemplateMiddleware
 } from "insite-http";
 import { type AbilitiesSchema, Users } from "insite-users-server";
-import { UsersServer } from "insite-users-server-ws";
-import type { Optional, Options } from "./types";
+import { UsersServer, type WSSCWithUser } from "insite-users-server-ws";
+import type { Optional, Options, WSS } from "./types";
 
 
-export class InSite<AS extends AbilitiesSchema> {
-	constructor(options: Options<AS>) {
+export class InSite<AS extends AbilitiesSchema, O extends Options<AS>> {
+	constructor(options: O) {
 		this.initPromise = this.init!(options);
 		
 	}
@@ -28,7 +28,7 @@ export class InSite<AS extends AbilitiesSchema> {
 	mongoClient!: MongoClient;
 	db!: InSiteDB;
 	collections!: InSiteCollections;
-	wss!: InSiteWebSocketServer;
+	wss!: WSS<AS, O>;
 	incomingTransport!: IncomingTransport;
 	outgoingTransport!: OutgoingTransport;
 	subscriptionHandler!: SubscriptionHandler<AS>;
@@ -62,10 +62,10 @@ export class InSite<AS extends AbilitiesSchema> {
 				...wssOptions
 			} = wssWithOtherOptions;
 			
-			this.wss = new InSiteWebSocketServer(wssOptions);
+			this.wss = new InSiteWebSocketServer<WSSCWithUser<AS>>(wssOptions) as WSS<AS, O>;
 			
 			if (subscriptions !== null)
-				this.subscriptionHandler = new SubscriptionHandler(this.wss);
+				this.subscriptionHandler = new SubscriptionHandler(this.wss, !!this.collections);
 			
 			if (incomingTransportOptions !== null && (incomingTransportOptions || (this.collections && usersWithServerOptions)))
 				this.incomingTransport = new IncomingTransport(this.wss, incomingTransportOptions);
@@ -74,7 +74,7 @@ export class InSite<AS extends AbilitiesSchema> {
 				this.outgoingTransport = new OutgoingTransport(this.wss);
 			
 			if (process.env.NODE_ENV === "development")
-				this.wss.on("client-connect", (wssc: WithUser<InSiteWebSocketServerClient>) => console.info(`🔌 WebSocket connected with ${wssc.session?.user.email}`));
+				this.wss.on("client-connect", wssc => console.info(`🔌 WebSocket connected with ${wssc.session?.user.email}`));
 			
 			this.wss.on("error", (error: Error) => console.error("🔌❗️ WebSocket Server:", error));
 			this.wss.on("close", () => console.error("🔌❗️ WebSocket Server closed"));
@@ -137,11 +137,10 @@ export class InSite<AS extends AbilitiesSchema> {
 	}
 	
 	
-	static init<
-		IAS extends AbilitiesSchema,
-		IO extends Options<IAS>
-	>(options: IO) {
-		return (new InSite(options)).whenReady() as Promise<Optional<InSite<IAS>, IO, IAS>>;
+	static init<IO extends Options<any>>(options: IO) { // eslint-disable-line @typescript-eslint/no-explicit-any
+		type IAS = IO extends Options<infer EIAS> ? EIAS : never;
+		
+		return (new InSite(options)).whenReady() as Promise<Optional<InSite<IAS, IO>, IO, IAS>>;
 	}
 	
 }
