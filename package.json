@@ -22,17 +22,18 @@
   "author": "Eugene Nesvetaev <dev@nesvet.dev> (https://nesvet.dev/)",
   "license": "MIT",
   "dependencies": {
-    "insite-cookie": "^2.0.2",
+    "insite-cookie": "^2.0.3",
     "insite-db": "^2.0.1",
     "insite-http": "^2.0.3",
-    "insite-subscriptions-server": "^2.0.3",
-    "insite-users-server-ws": "^2.0.2",
+    "insite-subscriptions-server": "^2.0.4",
+    "insite-users-server-ws": "^2.0.3",
+    "insite-ws": "^2.0.12",
     "insite-ws-transfers": "^2.0.6"
   },
   "devDependencies": {
     "@nesvet/conveyer": "^2.2.1",
     "@nesvet/eslint-config": "^2.0.24",
-    "@types/node": "^20.14.14",
+    "@types/node": "^22.1.0",
     "@types/ws": "^8.5.12",
     "typescript": "^5.5.4"
   }
