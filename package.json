@@ -22,13 +22,13 @@
   "author": "Eugene Nesvetaev <dev@nesvet.dev> (https://nesvet.dev/)",
   "license": "MIT",
   "dependencies": {
-    "insite-cookie": "^2.0.3",
+    "insite-cookie": "^2.0.4",
     "insite-db": "^2.0.1",
-    "insite-http": "^2.0.3",
+    "insite-http": "^2.0.4",
     "insite-subscriptions-server": "^2.0.4",
-    "insite-users-server-ws": "^2.0.3",
-    "insite-ws": "^2.0.12",
-    "insite-ws-transfers": "^2.0.7"
+    "insite-users-server-ws": "^2.0.4",
+    "insite-ws": "^2.0.13",
+    "insite-ws-transfers": "^2.0.8"
   },
   "devDependencies": {
     "@nesvet/conveyer": "^2.2.1",
