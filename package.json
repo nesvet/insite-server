@@ -26,6 +26,7 @@
     "insite-db": "^2",
     "insite-http": "^2",
     "insite-subscriptions-server": "^2",
+    "insite-users-server": "^2",
     "insite-users-server-ws": "^2",
     "insite-ws": "^2",
     "insite-ws-transfers": "^2"
