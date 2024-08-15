@@ -1,11 +1,11 @@
 {
   "name": "insite-server",
-  "version": "2.0.7",
+  "version": "2.0.8",
   "description": "inSite server",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
-  "packageManager": "bun@1.1.23",
+  "packageManager": "bun@1.1.24",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "bun .conveyer.js",
