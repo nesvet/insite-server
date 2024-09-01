@@ -20,6 +20,9 @@ import { UsersServer, type WSSCWithUser } from "insite-users-server-ws";
 import type { InSiteWebSocketServerWithActualProps, InSiteWithActualProps, Options } from "./types";
 
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+
 export class InSite<AS extends AbilitiesSchema, O extends Options<AS>> {
 	constructor(options: O) {
 		this.initPromise = this.init!(options);
@@ -138,10 +141,14 @@ export class InSite<AS extends AbilitiesSchema, O extends Options<AS>> {
 	}
 	
 	
-	static init<IO extends Options<any>>(options: IO) { // eslint-disable-line @typescript-eslint/no-explicit-any
-		type IAS = IO extends Options<infer EIAS> ? EIAS : never;
+	static init<IO extends Options<any>, IAS extends AbilitiesSchema = IO extends Options<infer A> ? A : never>(options: IO, asPromise?: true): Promise<InSiteWithActualProps<InSite<IAS, IO>, IO>>;
+	static init<IO extends Options<any>, IAS extends AbilitiesSchema = IO extends Options<infer A> ? A : never>(options: IO, asPromise: false): InSiteWithActualProps<InSite<IAS, IO>, IO>;
+	static init<IO extends Options<any>, IAS extends AbilitiesSchema = IO extends Options<infer A> ? A : never>(options: IO, asPromise = true) {
+		const inSite = new InSite(options);
 		
-		return (new InSite(options)).whenReady() as Promise<InSiteWithActualProps<InSite<IAS, IO>, IO>>;
+		return asPromise ?
+			inSite.whenReady() as Promise<InSiteWithActualProps<InSite<IAS, IO>, IO>> :
+			inSite as InSiteWithActualProps<InSite<IAS, IO>, IO>;
 	}
 	
 }
