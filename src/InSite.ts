@@ -142,7 +142,7 @@ export class InSite<AS extends AbilitiesSchema, O extends Options<AS>> {
 	
 	
 	static init<IO extends Options<any>, IAS extends AbilitiesSchema = IO extends Options<infer A> ? A : never>(options: IO, asPromise?: true): Promise<InSiteWithActualProps<InSite<IAS, IO>, IO>>;
-	static init<IO extends Options<any>, IAS extends AbilitiesSchema = IO extends Options<infer A> ? A : never>(options: IO, asPromise: false): InSiteWithActualProps<InSite<IAS, IO>, IO>;
+	static init<IO extends Options<any>, IAS extends AbilitiesSchema = IO extends Options<infer A> ? A : never>(options: IO, asPromise?: false): InSiteWithActualProps<InSite<IAS, IO>, IO>;
 	static init<IO extends Options<any>, IAS extends AbilitiesSchema = IO extends Options<infer A> ? A : never>(options: IO, asPromise = true) {
 		const inSite = new InSite(options);
 		
