@@ -43,7 +43,7 @@ export class InSite<AS extends AbilitiesSchema, O extends Options<AS>> {
 	cookie!: CookieSetter<AS>;
 	http!: InSiteHTTPServer;
 	
-	private init? = async (options: O) => {
+	init? = async (options: O) => {
 		
 		const {
 			db: dbOptions,
