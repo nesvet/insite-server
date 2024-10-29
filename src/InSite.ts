@@ -2,6 +2,7 @@ import { CookieSetter, InSiteCookieMiddleware } from "insite-cookie/server";
 import { SubscriptionHandler } from "insite-subscriptions-server/ws";
 import { InSiteWebSocketServer } from "insite-ws/server";
 import { IncomingTransport, OutgoingTransport } from "insite-ws-transfers/node";
+import { StatefulPromise } from "@nesvet/n";
 import type { AbilitiesSchema } from "insite-common";
 import {
 	connect,
@@ -24,8 +25,9 @@ import type { InSiteWebSocketServerWithActualProps, InSiteWithActualProps, Optio
 
 
 export class InSite<AS extends AbilitiesSchema, O extends Options<AS>> {
-	constructor(options: O) {
-		this.initPromise = this.init!(options);
+	constructor(options?: O) {
+		if (options)
+			this.init!(options);
 		
 	}
 	
@@ -131,13 +133,14 @@ export class InSite<AS extends AbilitiesSchema, O extends Options<AS>> {
 		
 		delete this.init;
 		
-		return this;
+		this.#initPromise.resolve(this);
+		
 	};
 	
-	private initPromise;
+	#initPromise = new StatefulPromise<this>();
 	
 	whenReady() {
-		return this.initPromise;
+		return this.#initPromise;
 	}
 	
 	
