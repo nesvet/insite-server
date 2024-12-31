@@ -5,8 +5,8 @@ import type { AnyProp, ExtendsOrOmit } from "@nesvet/n";
 import type { AbilitiesSchema } from "insite-common";
 import type { Options as DBOptions } from "insite-db";
 import type {
+	Middleware as HTTPServerMiddleware,
 	Options as HTTPServerOptions,
-	InSiteServerMiddleware,
 	StaticMiddlewareOptions,
 	TemplateMiddlewareOptions
 } from "insite-http";
@@ -37,7 +37,7 @@ type Cookie<AS extends AbilitiesSchema> = {
 type HTTP = ({
 	static?: null | StaticMiddlewareOptions;
 	template?: null | TemplateMiddlewareOptions;
-	middlewares?: InSiteServerMiddleware[];
+	middlewares?: HTTPServerMiddleware[];
 } & HTTPServerOptions) | true;
 
 
