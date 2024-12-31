@@ -24,12 +24,12 @@
   "dependencies": {
     "@nesvet/n": "^1.1.7",
     "insite-common": "^2.0.0",
-    "insite-cookie": "^2.0.28",
+    "insite-cookie": "^2.0.29",
     "insite-db": "^2.0.3",
     "insite-http": "^2.0.6",
-    "insite-subscriptions-server": "^2.0.19",
-    "insite-users-server": "^2.0.99",
-    "insite-users-server-ws": "^2.0.27",
+    "insite-subscriptions-server": "^2.0.20",
+    "insite-users-server": "^2.0.100",
+    "insite-users-server-ws": "^2.0.28",
     "insite-ws": "^2.0.18",
     "insite-ws-transfers": "^2.0.16"
   },
