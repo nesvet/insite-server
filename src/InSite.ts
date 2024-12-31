@@ -35,8 +35,8 @@ export class InSite<AS extends AbilitiesSchema, O extends Options<AS>> {
 	db!: InSiteDB;
 	collections!: InSiteCollections;
 	wss!: InSiteWebSocketServerWithActualProps<AS, O>;
-	incomingTransport!: IncomingTransport;
-	outgoingTransport!: OutgoingTransport;
+	incomingTransport!: IncomingTransport<WSSCWithUser<AS>>;
+	outgoingTransport!: OutgoingTransport<WSSCWithUser<AS>>;
 	subscriptionHandler!: SubscriptionHandler<AS>;
 	usersServer!: UsersServer<AS>;
 	users!: Users<AS>;
