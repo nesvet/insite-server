@@ -106,16 +106,16 @@ export class InSite<AS extends AbilitiesSchema, O extends Options<AS>> {
 		if (httpWithMiddlewareOptions) {
 			const {
 				static: staticMiddlewareOptions = undefined, // eslint-disable-line unicorn/no-useless-undefined
-				template: templateMiddlewareOptions = undefined, // eslint-disable-line unicorn/no-useless-undefined
 				middlewares = undefined, // eslint-disable-line unicorn/no-useless-undefined
+				template: templateMiddlewareOptions = undefined, // eslint-disable-line unicorn/no-useless-undefined
 				...httpOptions
 			} = typeof httpWithMiddlewareOptions == "object" ? httpWithMiddlewareOptions : {};
 			
 			this.http = new InSiteHTTPServer(httpOptions, [
-				staticMiddlewareOptions !== null && new InSiteStaticMiddleware(staticMiddlewareOptions ?? {}),
+				...middlewares ?? [],
 				cookieWithMiddlewareOptions !== null && new InSiteCookieMiddleware(cookieWithMiddlewareOptions?.middleware ?? {}),
-				templateMiddlewareOptions !== null && new InSiteTemplateMiddleware(templateMiddlewareOptions ?? {}),
-				...middlewares ?? []
+				staticMiddlewareOptions !== null && new InSiteStaticMiddleware(staticMiddlewareOptions ?? {}),
+				templateMiddlewareOptions !== null && new InSiteTemplateMiddleware(templateMiddlewareOptions ?? {})
 			].filter(Boolean) as InSiteServerMiddleware[]);
 		}
 		
