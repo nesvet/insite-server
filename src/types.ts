@@ -66,15 +66,7 @@ type OptionsWithCookie = { cookie?: Cookie<any> } & OptionsWithHTTP & OptionsWit
 
 export type InSiteWithActualProps<IS, O> =
 	ExtendsOrOmit<O, OptionsWithDB, "collections" | "db" | "mongoClient",
-		ExtendsOrOmit<O, OptionsWithWSS, "wss",
-			ExtendsOrOmit<O, OptionsWithWSSSubscriptionHandler, "subscriptionHandler",
-				ExtendsOrOmit<O, OptionsWithWSSIncomingTransport, "incomingTransport",
-					ExtendsOrOmit<O, OptionsWithWSSOutgoingTransport, "outgoingTransport",
-						ExtendsOrOmit<O, OptionsWithUsers, "users",
-							ExtendsOrOmit<O, OptionsWithUsersServer, "usersServer",
-								ExtendsOrOmit<O, OptionsWithHTTP, "http",
-									ExtendsOrOmit<O, OptionsWithCookie, "cookie",
-										IS
+		ExtendsOrOmit<O, OptionsWithConfig, "config",
 									>
 								>
 							>
@@ -85,7 +77,7 @@ export type InSiteWithActualProps<IS, O> =
 		>
 	>;
 
-export type InSiteWebSocketServerWithActualProps<AS extends AbilitiesSchema, O> =
+export type InSiteConfig<O extends Options<any>> = Config<O["config"] extends ConfigSchema ? O["config"] : never>;
 	O extends OptionsWithWSSSubscriptionHandler ?
 		O extends OptionsWithDB ?
 			WithPublishCollection<InSiteWebSocketServer<WSSCWithUser<AS>>, AS> :
