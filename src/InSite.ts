@@ -47,8 +47,14 @@ export class InSite<AS extends AbilitiesSchema, O extends Options<AS>> {
 	
 			if (this.collections && configSchema)
 				this.config = await initConfig(this.collections, configSchema) as InSiteConfig<O>;
-		
-	};
+			const server =
+				port && (wssWithOtherOptions || httpWithMiddlewareOptions) ?
+					await createServer({
+						...wssWithOtherOptions && InSiteWebSocketServer.makeProps({ ...wssWithOtherOptions, ssl }),
+						...httpWithMiddlewareOptions && InSiteHTTPServer.makeProps({ ...typeof httpWithMiddlewareOptions == "object" ? httpWithMiddlewareOptions : {}, ssl })
+					}, port) :
+					undefined;
+					server,
 	
 	#initPromise = new StatefulPromise<this>();
 	
