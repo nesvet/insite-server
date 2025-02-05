@@ -1,8 +1,7 @@
-import type { CookieMiddlewareOptions, Options as CookieSetterOptions } from "insite-cookie/server";
-import type { WithPublish, WithPublishCollection } from "insite-subscriptions-server/ws";
-import type { InSiteWebSocketServer, Options as WSServerOptions } from "insite-ws/server";
 import type { AnyProp, ExtendsOrOmit } from "@nesvet/n";
 import type { AbilitiesSchema } from "insite-common";
+import type { Config, Schema as ConfigSchema } from "insite-config";
+import type { CookieMiddlewareOptions, Options as CookieSetterOptions } from "insite-cookie/server";
 import type { Options as DBOptions } from "insite-db";
 import type {
 	Middleware as HTTPServerMiddleware,
@@ -10,9 +9,11 @@ import type {
 	StaticMiddlewareOptions,
 	TemplateMiddlewareOptions
 } from "insite-http";
+import type { WithPublish, WithPublishCollection } from "insite-subscriptions-server/ws";
 import type { Options as UsersOptions } from "insite-users-server";
 import type { Options as UsersServerOptions, WSSCWithUser } from "insite-users-server-ws";
-import type { IncomingTransportOptions } from "insite-ws-transfers";
+import type { IncomingTransportOptions, WithOnTransfer, WithTransfer } from "insite-ws-transfers";
+import type { InSiteWebSocketServer, InSiteWebSocketServerClient, Options as WSServerOptions } from "insite-ws/server";
 
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -22,27 +23,33 @@ type DB = DBOptions;
 type WSSSubscriptions = true;
 type WSSIncomingTransport = IncomingTransportOptions | true;
 type WSSOutgoingTransport = true;
-type WSS<AS extends AbilitiesSchema> = {
-	subscriptions?: null | WSSSubscriptions;
-	incomingTransport?: null | WSSIncomingTransport;
-	outgoingTransport?: null | WSSOutgoingTransport;
-} & WSServerOptions<WSSCWithUser<AS>>;
+type WSS<AS extends AbilitiesSchema> = WSServerOptions<WSSCWithUser<AS>> & {
+	subscriptions?: WSSSubscriptions | null;
+	incomingTransport?: WSSIncomingTransport | null;
+	outgoingTransport?: WSSOutgoingTransport | null;
+};
 type UsersServer<AS extends AbilitiesSchema> = Omit<UsersServerOptions<AS>, "collections" | "incomingTransport" | "users" | "wss">;
-type Users<AS extends AbilitiesSchema> = {
+type Users<AS extends AbilitiesSchema> = UsersOptions<AS> & {
 	server?: UsersServer<AS>;
-} & UsersOptions<AS>;
-type Cookie<AS extends AbilitiesSchema> = {
+};
+type Cookie<AS extends AbilitiesSchema> = Omit<CookieSetterOptions<AS>, "usersServer"> & {
 	middleware?: CookieMiddlewareOptions;
-} & Omit<CookieSetterOptions<AS>, "usersServer">;
-type HTTP = ({
-	static?: null | StaticMiddlewareOptions;
-	template?: null | TemplateMiddlewareOptions;
-	middlewares?: HTTPServerMiddleware[];
-} & HTTPServerOptions) | true;
+};
+type HTTP = (HTTPServerOptions & {
+	static?: StaticMiddlewareOptions | null;
+	template?: TemplateMiddlewareOptions | null;
+	middlewares?: (HTTPServerMiddleware | false | null | undefined)[];
+}) | true;
 
 
 export type Options<AS extends AbilitiesSchema> = {
 	db?: DB;
+	config?: ConfigSchema | null;
+	ssl?: {
+		cert: string;
+		key: string;
+	};
+	port?: number | string;
 	wss?: WSS<AS>;
 	users?: Users<AS>;
 	cookie?: Cookie<AS> | null;
@@ -50,23 +57,34 @@ export type Options<AS extends AbilitiesSchema> = {
 };
 
 
-type OptionsWithDB = { db: DB } & AnyProp;
-type OptionsWithWSS = { wss: WSS<any> } & AnyProp;
-type OptionsWithWSSSubscriptionHandler = { wss: { subscriptions?: WSSSubscriptions } & AnyProp } & AnyProp;
+type OptionsWithDB = AnyProp & { db: DB };
+type OptionsWithConfig = OptionsWithDB & { config: ConfigSchema };
+type OptionsWithWSS = AnyProp & { wss: WSS<any> };
+type OptionsWithWSSSubscriptionHandler = AnyProp & { wss: AnyProp & { subscriptions?: WSSSubscriptions } };
 type OptionsWithWSSIncomingTransport = (
-	({ wss: { incomingTransport: WSSIncomingTransport } & AnyProp }) |
-	({ wss: { incomingTransport?: WSSIncomingTransport } & AnyProp } & OptionsWithUsers)
+	(OptionsWithUsers & { wss: AnyProp & { incomingTransport?: WSSIncomingTransport } }) |
+	({ wss: AnyProp & { incomingTransport: WSSIncomingTransport } })
 ) & AnyProp;
-type OptionsWithWSSOutgoingTransport = { wss: { outgoingTransport: WSSOutgoingTransport } & AnyProp } & AnyProp;
-type OptionsWithUsers = { users: Users<any> } & AnyProp & OptionsWithDB;
+type OptionsWithWSSOutgoingTransport = AnyProp & { wss: AnyProp & { outgoingTransport: WSSOutgoingTransport } };
+type OptionsWithUsers = AnyProp & OptionsWithDB & { users: Users<any> };
 type OptionsWithUsersServer = OptionsWithDB & OptionsWithUsers & OptionsWithWSSSubscriptionHandler;
-type OptionsWithHTTP = { http: HTTP } & AnyProp;
-type OptionsWithCookie = { cookie?: Cookie<any> } & OptionsWithHTTP & OptionsWithUsersServer;
+type OptionsWithHTTP = AnyProp & { http: HTTP };
+type OptionsWithCookie = OptionsWithHTTP & OptionsWithUsersServer & { cookie?: Cookie<any> };
 
 
-export type InSiteWithActualProps<IS, O> =
+export type OmitRedundant<I, O> =
 	ExtendsOrOmit<O, OptionsWithDB, "collections" | "db" | "mongoClient",
 		ExtendsOrOmit<O, OptionsWithConfig, "config",
+			ExtendsOrOmit<O, OptionsWithWSS, "wss",
+				ExtendsOrOmit<O, OptionsWithWSSSubscriptionHandler, "subscriptionHandler",
+					ExtendsOrOmit<O, OptionsWithWSSIncomingTransport, "incomingTransport",
+						ExtendsOrOmit<O, OptionsWithWSSOutgoingTransport, "outgoingTransport",
+							ExtendsOrOmit<O, OptionsWithUsers, "users",
+								ExtendsOrOmit<O, OptionsWithUsersServer, "usersServer",
+									ExtendsOrOmit<O, OptionsWithHTTP, "http",
+										ExtendsOrOmit<O, OptionsWithCookie, "cookie",
+											I
+										>
 									>
 								>
 							>
@@ -78,8 +96,34 @@ export type InSiteWithActualProps<IS, O> =
 	>;
 
 export type InSiteConfig<O extends Options<any>> = Config<O["config"] extends ConfigSchema ? O["config"] : never>;
+
+
+type OptionalPublish<O, AS extends AbilitiesSchema, W> =
 	O extends OptionsWithWSSSubscriptionHandler ?
 		O extends OptionsWithDB ?
-			WithPublishCollection<InSiteWebSocketServer<WSSCWithUser<AS>>, AS> :
-			WithPublish<InSiteWebSocketServer<WSSCWithUser<AS>>, AS> :
-		InSiteWebSocketServer<WSSCWithUser<AS>>;
+			WithPublishCollection<W, AS> :
+			WithPublish<W, AS> :
+		W;
+
+type OptionalTransfer<O, WSSC extends InSiteWebSocketServerClient, W> =
+	O extends OptionsWithWSSOutgoingTransport ?
+		WithTransfer<W, WSSC> :
+		W;
+
+type OptionalOnTransfer<O, WSSC extends InSiteWebSocketServerClient, W> =
+	O extends OptionsWithWSSIncomingTransport ?
+		WithOnTransfer<W, WSSC> :
+		W;
+
+export type InSiteWebSocketServerWithActualProps<
+	AS extends AbilitiesSchema,
+	O,
+	WSSC extends InSiteWebSocketServerClient = WSSCWithUser<AS>
+> =
+	OptionalPublish<O, AS,
+		OptionalTransfer<O, WSSC,
+			OptionalOnTransfer<O, WSSC,
+				InSiteWebSocketServer<WSSC>
+			>
+		>
+	>;
