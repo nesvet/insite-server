@@ -4,7 +4,7 @@ import type { Config, Schema as ConfigSchema } from "insite-config";
 import type { CookieMiddlewareOptions, Options as CookieSetterOptions } from "insite-cookie/server";
 import type { Options as DBOptions } from "insite-db";
 import type {
-	Middleware as HTTPServerMiddleware,
+	GenericMiddleware,
 	Options as HTTPServerOptions,
 	StaticMiddlewareOptions,
 	TemplateMiddlewareOptions
@@ -13,7 +13,7 @@ import type { WithPublish, WithPublishCollection } from "insite-subscriptions-se
 import type { Options as UsersOptions } from "insite-users-server";
 import type { Options as UsersServerOptions, WSSCWithUser } from "insite-users-server-ws";
 import type { IncomingTransportOptions, WithOnTransfer, WithTransfer } from "insite-ws-transfers";
-import type { InSiteWebSocketServer, InSiteWebSocketServerClient, Options as WSServerOptions } from "insite-ws/server";
+import type { Options as WSServerOptions, WSServer, WSServerClient } from "insite-ws/server";
 
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -38,7 +38,7 @@ type Cookie<AS extends AbilitiesSchema> = Omit<CookieSetterOptions<AS>, "usersSe
 type HTTP = (HTTPServerOptions & {
 	static?: StaticMiddlewareOptions | null;
 	template?: TemplateMiddlewareOptions | null;
-	middlewares?: (HTTPServerMiddleware | false | null | undefined)[];
+	middlewares?: (GenericMiddleware | false | null | undefined)[];
 }) | true;
 
 
@@ -95,7 +95,7 @@ export type OmitRedundant<I, O> =
 		>
 	>;
 
-export type InSiteConfig<O extends Options<any>> = Config<O["config"] extends ConfigSchema ? O["config"] : never>;
+export type ServerConfig<O extends Options<any>> = Config<O["config"] extends ConfigSchema ? O["config"] : never>;
 
 
 type OptionalPublish<O, AS extends AbilitiesSchema, W> =
@@ -105,25 +105,25 @@ type OptionalPublish<O, AS extends AbilitiesSchema, W> =
 			WithPublish<W, AS> :
 		W;
 
-type OptionalTransfer<O, WSSC extends InSiteWebSocketServerClient, W> =
+type OptionalTransfer<O, WSSC extends WSServerClient, W> =
 	O extends OptionsWithWSSOutgoingTransport ?
 		WithTransfer<W, WSSC> :
 		W;
 
-type OptionalOnTransfer<O, WSSC extends InSiteWebSocketServerClient, W> =
+type OptionalOnTransfer<O, WSSC extends WSServerClient, W> =
 	O extends OptionsWithWSSIncomingTransport ?
 		WithOnTransfer<W, WSSC> :
 		W;
 
-export type InSiteWebSocketServerWithActualProps<
+export type WSServerWithActualProps<
 	AS extends AbilitiesSchema,
 	O,
-	WSSC extends InSiteWebSocketServerClient = WSSCWithUser<AS>
+	WSSC extends WSServerClient = WSSCWithUser<AS>
 > =
 	OptionalPublish<O, AS,
 		OptionalTransfer<O, WSSC,
 			OptionalOnTransfer<O, WSSC,
-				InSiteWebSocketServer<WSSC>
+				WSServer<WSSC>
 			>
 		>
 	>;

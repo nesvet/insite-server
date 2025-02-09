@@ -1,29 +1,29 @@
 import { StatefulPromise } from "@nesvet/n";
 import { createServer, type AbilitiesSchema } from "insite-common/backend";
 import { init as initConfig } from "insite-config";
-import { CookieSetter, InSiteCookieMiddleware } from "insite-cookie/server";
+import { CookieMiddleware, CookieSetter } from "insite-cookie/server";
 import {
 	connect,
-	type InSiteCollections,
-	type InSiteDB,
+	type Collections,
+	type DB,
 	type MongoClient
 } from "insite-db";
 import {
-	InSiteHTTPServer,
-	InSiteServerMiddleware,
-	InSiteStaticMiddleware,
-	InSiteTemplateMiddleware
+	ClassMiddleware,
+	HTTPServer,
+	StaticMiddleware,
+	TemplateMiddleware
 } from "insite-http";
 import { SubscriptionHandler } from "insite-subscriptions-server/ws";
 import { Users } from "insite-users-server";
 import { UsersServer, type WSSCWithUser } from "insite-users-server-ws";
 import { IncomingTransport, OutgoingTransport } from "insite-ws-transfers/node";
-import { InSiteWebSocketServer } from "insite-ws/server";
+import { WSServer } from "insite-ws/server";
 import type {
-	InSiteConfig,
-	InSiteWebSocketServerWithActualProps,
 	OmitRedundant,
-	Options
+	Options,
+	ServerConfig,
+	WSServerWithActualProps
 } from "./types";
 
 
@@ -35,17 +35,17 @@ export class InSite<AS extends AbilitiesSchema, O extends Options<AS>> {
 	}
 	
 	mongoClient!: MongoClient;
-	db!: InSiteDB;
-	config!: InSiteConfig<O>;
-	collections!: InSiteCollections;
-	wss!: InSiteWebSocketServerWithActualProps<AS, O>;
+	db!: DB;
+	config!: ServerConfig<O>;
+	collections!: Collections;
+	wss!: WSServerWithActualProps<AS, O>;
 	incomingTransport!: IncomingTransport<WSSCWithUser<AS>>;
 	outgoingTransport!: OutgoingTransport<WSSCWithUser<AS>>;
 	subscriptionHandler!: SubscriptionHandler<AS>;
 	usersServer!: UsersServer<AS>;
 	users!: Users<AS>;
 	cookie!: CookieSetter<AS>;
-	http!: InSiteHTTPServer;
+	http!: HTTPServer;
 	
 	#isInited = false;
 	
@@ -73,13 +73,13 @@ export class InSite<AS extends AbilitiesSchema, O extends Options<AS>> {
 				} = await connect(dbOptions));
 			
 			if (this.collections && configSchema)
-				this.config = await initConfig(this.collections, configSchema) as InSiteConfig<O>;
+				this.config = await initConfig(this.collections, configSchema) as ServerConfig<O>;
 			
 			const server =
 				port && (wssWithOtherOptions || httpWithMiddlewareOptions) ?
 					await createServer({
-						...wssWithOtherOptions && InSiteWebSocketServer.makeProps({ ...wssWithOtherOptions, ssl }),
-						...httpWithMiddlewareOptions && InSiteHTTPServer.makeProps({ ...typeof httpWithMiddlewareOptions == "object" ? httpWithMiddlewareOptions : {}, ssl })
+						...wssWithOtherOptions && WSServer.makeProps({ ...wssWithOtherOptions, ssl }),
+						...httpWithMiddlewareOptions && HTTPServer.makeProps({ ...typeof httpWithMiddlewareOptions == "object" ? httpWithMiddlewareOptions : {}, ssl })
 					}, port) :
 					undefined;
 			
@@ -91,10 +91,10 @@ export class InSite<AS extends AbilitiesSchema, O extends Options<AS>> {
 					...wssOptions
 				} = wssWithOtherOptions;
 				
-				this.wss = new InSiteWebSocketServer<WSSCWithUser<AS>>({
+				this.wss = new WSServer<WSSCWithUser<AS>>({
 					server,
 					...wssOptions
-				}) as InSiteWebSocketServerWithActualProps<AS, O>;
+				}) as WSServerWithActualProps<AS, O>;
 				
 				if (subscriptions !== null)
 					this.subscriptionHandler = new SubscriptionHandler(this.wss, !!this.collections);
@@ -137,15 +137,15 @@ export class InSite<AS extends AbilitiesSchema, O extends Options<AS>> {
 					...httpOptions
 				} = typeof httpWithMiddlewareOptions == "object" ? httpWithMiddlewareOptions : {};
 				
-				this.http = new InSiteHTTPServer({
+				this.http = new HTTPServer({
 					server,
 					...httpOptions
 				}, [
 					...middlewares ?? [],
-					cookieWithMiddlewareOptions !== null && new InSiteCookieMiddleware(cookieWithMiddlewareOptions?.middleware ?? {}),
-					staticMiddlewareOptions !== null && new InSiteStaticMiddleware(staticMiddlewareOptions ?? {}),
-					templateMiddlewareOptions !== null && new InSiteTemplateMiddleware(templateMiddlewareOptions ?? {})
-				].filter(Boolean) as InSiteServerMiddleware[]);
+					cookieWithMiddlewareOptions !== null && new CookieMiddleware(cookieWithMiddlewareOptions?.middleware ?? {}),
+					staticMiddlewareOptions !== null && new StaticMiddleware(staticMiddlewareOptions ?? {}),
+					templateMiddlewareOptions !== null && new TemplateMiddleware(templateMiddlewareOptions ?? {})
+				].filter(Boolean) as ClassMiddleware[]);
 			}
 			
 			if (cookieWithMiddlewareOptions !== null && this.usersServer && this.http) {
