@@ -27,7 +27,13 @@ import type {
 } from "./types";
 
 
-export class InSite<AS extends AbilitiesSchema, O extends Options<AS>> {
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+
+export class InSite<
+	O extends Options<any>,
+	AS extends AbilitiesSchema = O extends Options<infer A> ? A : never
+> {
 	constructor(options?: O) {
 		if (options)
 			this.init(options);
@@ -171,10 +177,9 @@ export class InSite<AS extends AbilitiesSchema, O extends Options<AS>> {
 		return this.#initPromise;
 	}
 	
-	
-	static init<IAS extends AbilitiesSchema, IO extends Options<IAS>, IS extends InSite<IAS, IO>>(options: IO, asPromise?: true): Promise<OmitRedundant<IS, IO>>;
-	static init<IAS extends AbilitiesSchema, IO extends Options<IAS>, IS extends InSite<IAS, IO>>(options: IO, asPromise: false): OmitRedundant<IS, IO>;
-	static init<IAS extends AbilitiesSchema, IO extends Options<IAS>, IS extends InSite<IAS, IO>>(options: IO, asPromise = true) {
+	static init<IO extends Options<any>, IS extends InSite<IO>>(options: IO, asPromise?: true): Promise<OmitRedundant<IS, IO>>;
+	static init<IO extends Options<any>, IS extends InSite<IO>>(options: IO, asPromise: false): OmitRedundant<IS, IO>;
+	static init<IO extends Options<any>, IS extends InSite<IO>>(options: IO, asPromise = true) {
 		const inSite = new InSite(options) as IS;
 		
 		return asPromise ?
