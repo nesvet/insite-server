@@ -110,12 +110,6 @@ export class InSite<
 				
 				if (outgoingTransport)
 					this.outgoingTransport = new OutgoingTransport(this.wss);
-				
-				if (process.env.NODE_ENV === "development")
-					this.wss.on("client-connect", wssc => console.info(`🔌 WebSocket connected with ${wssc.session?.user.email}`));
-				
-				this.wss.on("error", (error: Error) => console.error("🔌❗️ WebSocket Server:", error));
-				this.wss.on("close", () => console.error("🔌❗️ WebSocket Server closed"));
 			}
 			
 			if (usersWithServerOptions && this.collections) {
