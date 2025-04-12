@@ -36,7 +36,7 @@ export class InSite<
 > {
 	constructor(options?: O) {
 		if (options)
-			this.init(options);
+			void this.init(options);
 		
 	}
 	
