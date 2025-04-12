@@ -23,6 +23,7 @@ import type {
 	OmitRedundant,
 	Options,
 	ServerConfig,
+	UsersServerWithActualProps,
 	WSServerWithActualProps
 } from "./types";
 
@@ -48,7 +49,7 @@ export class InSite<
 	incomingTransport!: IncomingTransport<WSSCWithUser<AS>>;
 	outgoingTransport!: OutgoingTransport<WSSCWithUser<AS>>;
 	subscriptionHandler!: SubscriptionHandler<AS>;
-	usersServer!: UsersServer<AS>;
+	usersServer!: UsersServerWithActualProps<AS, O>;
 	users!: Users<AS>;
 	cookie!: CookieSetter<AS>;
 	http!: HTTPServer;
@@ -68,7 +69,8 @@ export class InSite<
 				wss: wssWithOtherOptions,
 				users: usersWithServerOptions,
 				cookie: cookieWithMiddlewareOptions,
-				http: httpWithMiddlewareOptions
+				http: httpWithMiddlewareOptions,
+				public: isPublic
 			} = options;
 			
 			if (dbOptions)
@@ -117,12 +119,13 @@ export class InSite<
 				
 				if (this.wss && this.subscriptionHandler) {
 					this.usersServer = await UsersServer.init({
+						public: isPublic,
 						...usersServerOptions,
 						users: usersOptions,
 						wss: this.wss,
 						collections: this.collections,
 						incomingTransport: this.incomingTransport
-					});
+					}) as NonNullable<UsersServerWithActualProps<AS, O>>;
 					
 					this.users = this.usersServer.users;
 				} else
@@ -156,7 +159,7 @@ export class InSite<
 				
 				this.cookie = new CookieSetter<AS>({
 					...cookieOptions,
-					usersServer: this.usersServer
+					usersServer: this.usersServer as UsersServer<AS>
 				});
 			}
 			

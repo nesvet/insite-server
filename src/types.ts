@@ -11,7 +11,11 @@ import type {
 } from "insite-http";
 import type { WithPublish, WithPublishCollection } from "insite-subscriptions-server/ws";
 import type { Options as UsersOptions } from "insite-users-server";
-import type { Options as UsersServerOptions, WSSCWithUser } from "insite-users-server-ws";
+import type {
+	Options as UsersServerOptions,
+	UsersServerWithActualProps as USWAP,
+	WSSCWithUser
+} from "insite-users-server-ws";
 import type { IncomingTransportOptions, WithOnTransfer, WithTransfer } from "insite-ws-transfers";
 import type { Options as WSServerOptions, WSServer, WSServerClient } from "insite-ws/server";
 
@@ -54,6 +58,9 @@ export type Options<AS extends AbilitiesSchema> = {
 	users?: Users<AS>;
 	cookie?: Cookie<AS> | null;
 	http?: HTTP;
+	
+	/** Is server public */
+	public?: boolean;
 };
 
 
@@ -127,3 +134,21 @@ export type WSServerWithActualProps<
 			>
 		>
 	>;
+
+
+export type UsersServerWithActualProps<
+	AS extends AbilitiesSchema,
+	O extends Options<AS>
+> = USWAP<
+	AS,
+	O extends OptionsWithUsersServer ? (
+		(
+			O["public"] extends boolean ? {
+				public: O["public"];
+			} : object
+		) & O["users"]["server"] & {
+			wss: WSServerWithActualProps<AS, O>;
+			users: Omit<O["users"], "server">;
+		}
+	) : never
+>;
